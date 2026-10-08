@@ -53,19 +53,24 @@ Mantener el nombre del volumen `chronoathlos_videos_datos` entre actualizaciones
 
 ## 2. Correos
 
-- Autenticar `chronoathlos.com.py` en Brevo y agregar/verificar el remitente
-  `videos@chronoathlos.com.py`.
+La cuenta de Brevo es de FOCUS: la autenticación del dominio
+`chronoathlos.com.py`, el remitente `videos@chronoathlos.com.py` y la configuración
+del webhook las hacemos nosotros. De tu lado solo hay que completar estas variables
+en el `.env`.
+
 - `BREVO_CLAVE`: una clave SMTP de Brevo dedicada a este servicio; para SMTP
   completar también `BREVO_USUARIO_SMTP` con el usuario indicado por Brevo.
-  Santiago proporcionará las credenciales por un canal privado. No copiar la
-  credencial general de otros sistemas al repositorio.
+  Santiago proporcionará las dos por un canal privado. No copiar la credencial
+  general de otros sistemas al repositorio.
 - `CHRONO_REMITENTE=videos@chronoathlos.com.py`.
 - `CHRONO_URL_PUBLICA=https://videos.chronoathlos.com.py` (sin /v2).
 - `CHRONO_WEBHOOK_USUARIO=chronoathlos-videos` y clave independiente del token de subida.
-- En Brevo configurar webhook transaccional a
-  `https://videos.chronoathlos.com.py/api/brevo`, autenticación Basic con ese
-  usuario/clave. Eventos: delivered, opened/unique_opened, click, hard_bounce,
-  soft_bounce, blocked, spam, invalid_email.
+- Nosotros apuntamos el webhook transaccional de Brevo a
+  `https://videos.chronoathlos.com.py/api/brevo` con autenticación Basic y esos
+  mismos usuario y clave, para los eventos delivered, opened/unique_opened, click,
+  hard_bounce, soft_bounce, blocked, spam e invalid_email. Para eso **necesitamos
+  que nos pases la `CHRONO_WEBHOOK_CLAVE` que pusiste**, igual que el token de
+  subida: si no coincide, Brevo no puede avisar entregas ni rebotes.
 - Confirmar que el cupo disponible alcanza para los participantes de la carrera.
   El espaciado no aumenta el cupo diario.
 
@@ -140,7 +145,8 @@ procedimiento propio; no restaurar un índice antiguo sobre videos nuevos sin re
 ## 6. Qué necesitamos al terminar
 
 - Confirmación de HTTPS y volumen persistente.
-- Token de subida por canal privado, sin credenciales administrativas del servidor.
+- Token de subida y clave del webhook por canal privado, sin credenciales
+  administrativas del servidor.
 - Cuenta SSH de despliegue limitada a este servicio y huella del servidor (apartado 7).
 - Prueba conjunta de subida, correo, corrección y persistencia antes de usarlo en carrera.
 
