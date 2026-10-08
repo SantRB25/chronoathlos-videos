@@ -178,9 +178,14 @@ Configuración inicial a cargo del administrador:
    La clave privada queda en los secretos de GitHub; al administrador le enviamos
    únicamente la clave pública. El administrador ajustará su política de SSH y sudo
    para que esta cuenta no tenga otros métodos de acceso ni privilegios.
-4. Cargar en el entorno GitHub `produccion`: `VIDEOS_SSH_HOST`, `VIDEOS_SSH_USER`,
-   `VIDEOS_SSH_KEY` y `VIDEOS_SSH_KNOWN_HOSTS`. Confirmar la huella del servidor con
-   el administrador; no aceptar una huella obtenida sin verificar su identidad.
+4. Pasarnos la huella del servidor: la línea completa que devuelve, **en el propio
+   servidor**, `ssh-keyscan -t ed25519 <host-ssh>` (agregar `-p <puerto>` si SSH no
+   escucha en el 22). Con eso GitHub reconoce al servidor al conectarse y corta si
+   alguien responde en su lugar. Esa línea va al secreto `VIDEOS_SSH_KNOWN_HOSTS`,
+   junto con `VIDEOS_SSH_HOST`, `VIDEOS_SSH_USER` y `VIDEOS_SSH_KEY` en el entorno
+   GitHub `produccion`. La huella se confirma con el administrador por un canal
+   donde conste su identidad; una obtenida por nuestra cuenta desde internet no
+   sirve de control.
 5. Ejecutar a mano el workflow «Desplegar Docker por SSH limitado» desde
    `produccion`, después de pausar las tareas. El script solo actualiza el servicio
    `videos` y conserva su volumen. No usar un usuario dentro del grupo docker.
