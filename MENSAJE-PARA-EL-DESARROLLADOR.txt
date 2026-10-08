@@ -1,6 +1,6 @@
 Hola, te paso el servicio de videos de ChronoAthlos, independiente de la plataforma web.
 
-El ZIP incluye el código actual, Dockerfile, configuración de ejemplo e instrucciones en LEEME.md. El destino es https://videos.chronoathlos.com.py.
+El código está en https://github.com/SantRB25/chronoathlos-videos, rama produccion. Es de lectura pública: lo clonás directo, sin esperar una invitación. Escribir en él solo podemos nosotros. Ahí está siempre la versión vigente, con Dockerfile, configuración de ejemplo e instrucciones en LEEME.md. El destino es https://videos.chronoathlos.com.py.
 
 Para instalarlo:
 - Crear un servicio exclusivo, puerto interno 8090 y volumen persistente en /datos.
@@ -9,14 +9,10 @@ Para instalarlo:
 - Usar videos@chronoathlos.com.py como remitente una vez autenticado el dominio en Brevo.
 - Dejar una sola instancia del servicio. La PC procesa los clips; el servidor recibe y entrega.
 
-El código también está publicado en https://github.com/SantRB25/chronoathlos-videos, rama produccion. Es de lectura pública: podés clonarlo sin esperar una invitación, y escribir en él solo podemos nosotros. Ahí está siempre la versión más reciente de las instrucciones.
-
 Para las futuras actualizaciones proponemos un solo mecanismo: una cuenta SSH dedicada cuya clave únicamente pueda ejecutar el script de actualización de este servicio, sin consola, sin TTY y sin pertenecer al grupo docker. Así actualizamos y probamos nosotros sin tocar el código de tu plataforma ni el resto del servidor. El apartado 7 del LEEME tiene los pasos exactos; si preferís otro mecanismo, lo acordamos.
+
+De tu lado hacen falta el clon del repositorio en una carpeta del servidor, el script instalado como root, la cuenta SSH restringida y la huella de tu servidor. Nosotros ponemos la clave pública.
 
 El repositorio trae un workflow que prueba y construye cada cambio, y otro que se ejecuta a mano para pedir la actualización. Nada se despliega automáticamente. El servicio informa en /salud qué commit tiene instalado, así confirmamos la versión sin entrar al servidor.
 
-Cuando esté instalado, avisame y pasame el token de subida por privado. Comprobamos juntos subida, reproducción, correos y persistencia antes de usarlo en la carrera. Las pruebas del paquete se hicieron en un contenedor aislado; la validación final debe hacerse en tu servidor.
-
-Lo que necesitamos de tu lado para esa parte: el clon del repositorio en una carpeta
-del servidor, el script instalado como root, la cuenta SSH restringida y la huella
-de tu servidor. Todo está en el apartado 7. Nosotros ponemos la clave pública.
+Cuando esté instalado, avisame y pasame el token de subida por privado. Comprobamos juntos subida, reproducción, correos y persistencia antes de usarlo en la carrera. Las pruebas se hicieron en un contenedor aislado; la validación final debe hacerse en tu servidor.
