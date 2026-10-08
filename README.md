@@ -10,6 +10,4 @@ conserva los enlaces del corredor y gestiona los correos mediante Brevo.
 - [Variables de configuración sin secretos](.env.example)
 - [Comprobaciones realizadas y pendientes](VERIFICACIONES.txt)
 
-Rama de entrega: `produccion`. Las actualizaciones se despliegan explícitamente
-después de las pruebas. No incluir credenciales, datos de carreras ni grabaciones.
-El repositorio no está conectado todavía al servidor del cliente.
+Rama de entrega: `produccion`.
