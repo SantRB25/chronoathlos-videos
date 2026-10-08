@@ -1,0 +1,22 @@
+Hola, te paso el servicio de videos de ChronoAthlos, independiente de la plataforma web.
+
+El ZIP incluye el código actual, Dockerfile, configuración de ejemplo e instrucciones en LEEME.md. El destino es https://videos.chronoathlos.com.py.
+
+Para instalarlo:
+- Crear un servicio exclusivo, puerto interno 8090 y volumen persistente en /datos.
+- Configurar el subdominio con HTTPS, solicitudes de hasta 60 MB y timeout de subida de 180 segundos.
+- Cargar las variables de .env.example fuera del repositorio. Las credenciales de Brevo se coordinan por privado; el token de subida debe ser exclusivo de este servicio.
+- Usar videos@chronoathlos.com.py como remitente una vez autenticado el dominio en Brevo.
+- Dejar una sola instancia del servicio. La PC procesa los clips; el servidor recibe y entrega.
+
+Para las futuras actualizaciones: ¿qué método de despliegue usás en tu servidor? Proponemos conectar un repositorio privado independiente nuestro, con permiso de lectura, y que nos habilites un enlace de despliegue limitado únicamente al servicio de videos. Así actualizamos y probamos nosotros sin acceso al código de tu plataforma ni al resto del servidor. Si tu panel no admite eso, acordamos un mecanismo equivalente.
+
+El ZIP ya trae un workflow de GitHub con pruebas y despliegue manual; falta conectar el repositorio y ese mecanismo a tu servidor. No despliega automáticamente cada cambio.
+
+Cuando esté instalado, avisame y pasame el token de subida por privado. Comprobamos juntos subida, reproducción, correos y persistencia antes de usarlo en la carrera. Las pruebas del paquete se hicieron en un contenedor aislado; la validación final debe hacerse en tu servidor.
+
+Como confirmaste Docker, la propuesta concreta es Git privado + una clave SSH
+limitada a ejecutar el script de actualización de este servicio. Incluí el script
+y el workflow; el apartado 7 del LEEME detalla la configuración inicial. No
+necesitamos una consola libre ni pertenecer al grupo docker. Si te resulta más
+cómodo habilitar un webhook de despliegue exclusivo, también dejamos esa variante.

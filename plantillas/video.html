@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dorsal {{ v.dorsal }} · {{ v.titulo }}</title>
+
+<!-- Lo que se ve cuando alguien lo comparte por WhatsApp. Es como se difunde
+     esto: un corredor lo manda al grupo y ahí lo ven los demás. -->
+<meta property="og:title" content="Llegada del dorsal {{ v.dorsal }} — {{ v.nombre }}">
+<meta property="og:description" content="{{ v.titulo }}{% if v.tiempo %} · {{ v.tiempo }}{% endif %}">
+{% if hay_foto %}<meta property="og:image" content="foto.jpg">{% endif %}
+<meta property="og:type" content="video.other">
+<meta name="robots" content="noindex, nofollow">
+
+<style>
+  :root {
+    --fondo:   #0d1014;
+    --panel:   #161b22;
+    --borde:   #262d36;
+    --texto:   #e8edf3;
+    --tenue:   #8b97a6;
+    --acento:  #ffb020;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .hoja { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  header { text-align: center; margin-bottom: 18px; }
+  .evento {
+    font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--tenue); font-weight: 600;
+  }
+
+  /* El dorsal es lo primero que el corredor busca: que no haya que leer nada
+     para reconocer que la página es suya. */
+  .dorsal {
+    font-size: 3.4rem; font-weight: 800; line-height: 1;
+    margin: .25em 0 .1em; letter-spacing: -.02em;
+  }
+  .nombre { font-size: 1.15rem; font-weight: 600; }
+
+  video {
+    width: 100%; display: block; border-radius: 14px;
+    background: #000; margin: 18px 0;
+    border: 1px solid var(--borde);
+  }
+
+  .datos {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 1px; background: var(--borde);
+    border: 1px solid var(--borde); border-radius: 12px; overflow: hidden;
+  }
+  .dato { background: var(--panel); padding: 14px 10px; text-align: center; }
+  .dato dt {
+    font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--tenue); font-weight: 600; margin-bottom: 4px;
+  }
+  .dato dd {
+    margin: 0; font-size: 1.3rem; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .dato.destacado dd { color: var(--acento); }
+
+  .acciones { display: flex; gap: 10px; margin-top: 18px; }
+  .boton {
+    flex: 1; display: block; text-align: center; text-decoration: none;
+    padding: 14px; border-radius: 11px; font-weight: 650; font-size: .95rem;
+    border: 1px solid var(--borde); background: var(--panel); color: var(--texto);
+    cursor: pointer; font-family: inherit;
+  }
+  .boton.principal { background: var(--acento); color: #17120a; border-color: var(--acento); }
+  .boton:active { transform: translateY(1px); }
+
+  footer {
+    margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--borde);
+    text-align: center; color: var(--tenue); font-size: .8rem;
+  }
+  footer strong { color: var(--texto); font-weight: 600; }
+  .aviso { margin-top: 6px; font-size: .74rem; }
+</style>
+</head>
+<body>
+<main class="hoja">
+
+  <header>
+    <div class="evento">{{ v.titulo }}</div>
+    <div class="dorsal">{{ v.dorsal }}</div>
+    {% if v.nombre %}<div class="nombre">{{ v.nombre }}</div>{% endif %}
+  </header>
+
+  <video controls playsinline preload="metadata"
+         {% if hay_foto %}poster="foto.jpg"{% endif %}>
+    <source src="video.mp4" type="video/mp4">
+    Tu navegador no puede reproducir este video.
+  </video>
+
+  <dl class="datos">
+    {% if v.tiempo %}
+    <div class="dato destacado"><dt>Tiempo</dt><dd>{{ v.tiempo }}</dd></div>
+    {% endif %}
+    {% if v.posicion %}
+    <div class="dato"><dt>Puesto{% if v.posicion_tipo %} · {{ v.posicion_tipo }}{% endif %}</dt><dd>{{ v.posicion }}</dd></div>
+    {% endif %}
+    {% if v.categoria %}
+    <div class="dato"><dt>Categoría</dt><dd>{{ v.categoria }}</dd></div>
+    {% endif %}
+  </dl>
+
+  <div class="acciones">
+    <a class="boton principal" href="video.mp4?bajar=1">Descargar</a>
+    <button class="boton" id="compartir" hidden>Compartir</button>
+  </div>
+
+  <footer>
+    Cronometraje y video: <strong>ChronoAthlos</strong>
+    <div class="aviso">El video queda disponible seis meses.</div>
+  </footer>
+
+</main>
+
+<script>
+  // Compartir nativo: en el celular abre WhatsApp directo. Donde no existe,
+  // el botón no aparece en vez de fallar al tocarlo.
+  const boton = document.getElementById('compartir');
+  if (navigator.share) {
+    boton.hidden = false;
+    boton.addEventListener('click', () => {
+      navigator.share({
+        title: 'Dorsal {{ v.dorsal }} — {{ v.titulo }}',
+        text: 'Mi llegada en {{ v.titulo }}',
+        url: location.href
+      }).catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

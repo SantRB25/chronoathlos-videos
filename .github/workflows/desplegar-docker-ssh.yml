@@ -1,0 +1,46 @@
+name: Desplegar Docker por SSH limitado
+on:
+  workflow_dispatch:
+    inputs:
+      desplegar:
+        description: 'Confirmo despliegue de videos con tareas pausadas'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: chronoathlos-videos-produccion
+  cancel-in-progress: false
+jobs:
+  verificar:
+    if: inputs.desplegar && github.ref == 'refs/heads/produccion'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - run: docker build -t chronoathlos-videos:verificacion .
+  desplegar:
+    needs: verificar
+    runs-on: ubuntu-latest
+    environment: produccion
+    steps:
+      - name: Ejecutar comando exclusivo de actualizacion
+        env:
+          DEPLOY_HOST: ${{ secrets.VIDEOS_SSH_HOST }}
+          DEPLOY_USER: ${{ secrets.VIDEOS_SSH_USER }}
+          DEPLOY_KEY: ${{ secrets.VIDEOS_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.VIDEOS_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -eu
+          test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER" && test -n "$DEPLOY_KEY" && test -n "$DEPLOY_KNOWN_HOSTS"
+          task_ssh_dir=$(mktemp -d)
+          trap 'rm -rf "$task_ssh_dir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$task_ssh_dir/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$task_ssh_dir/known_hosts"
+          chmod 600 "$task_ssh_dir/key" "$task_ssh_dir/known_hosts"
+          ssh -i "$task_ssh_dir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$task_ssh_dir/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" desplegar

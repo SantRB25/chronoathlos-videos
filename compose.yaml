@@ -1,0 +1,30 @@
+name: chronoathlos-videos
+services:
+  videos:
+    build: ${CHRONO_CODIGO:-.}
+    image: chronoathlos-videos:${CHRONO_VERSION:-entrega-20261008}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CHRONO_TOKEN_SUBIDA: ${CHRONO_TOKEN_SUBIDA:?Completar CHRONO_TOKEN_SUBIDA en .env}
+      CHRONO_DATOS: /datos
+      PORT: '8090'
+    ports:
+      - '127.0.0.1:${CHRONO_PUERTO_HOST:-8090}:8090'
+    volumes:
+      - videos_datos:/datos
+    stop_grace_period: 180s
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/salud', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+volumes:
+  videos_datos:
+    name: chronoathlos_videos_datos
