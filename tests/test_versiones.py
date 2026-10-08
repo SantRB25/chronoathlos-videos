@@ -105,5 +105,30 @@ class Versiones(unittest.TestCase):
         with patch.dict(os.environ, CHRONO_VERSION=''):
             self.assertEqual(self.client.get('/salud').json['version'],'sin informar')
 
+    def test_borrar_evento_pide_el_nombre_dos_veces_y_limpia_archivos_e_indice(self):
+        url = self.subir().json['url']
+        c = servidor.conectar()
+        c.execute("INSERT INTO correos(evento,dorsal,email,estado) VALUES ('evento','1','p@example.test','enviado')")
+        c.commit()
+        c.close()
+        pedir = lambda **cuerpo: self.client.post('/api/borrar-evento', json=cuerpo,
+                                                  headers={'X-Token': 'prueba'})
+        self.assertEqual(self.client.post('/api/borrar-evento',
+                                          json={'evento': 'Evento', 'confirmar': 'Evento'}).status_code, 403)
+        self.assertEqual(pedir(evento='Evento', confirmar='otra cosa').status_code, 409)
+        self.assertEqual(pedir(evento='', confirmar='').status_code, 400)
+        self.assertTrue(self.estado()['videos']['1']['firma'], 'un pedido rechazado no borra nada')
+        hecho = pedir(evento='Evento', confirmar='Evento')
+        self.assertEqual(hecho.status_code, 200)
+        self.assertEqual((hecho.json['videos'], hecho.json['correos']), (1, 1))
+        self.assertEqual(self.estado()['videos'], {})
+        self.assertEqual(self.client.get(url + 'video.mp4').status_code, 404)
+        self.assertFalse((Path(self.tmp.name) / 'evento').exists())
+        c = servidor.conectar()
+        self.assertEqual(c.execute('SELECT COUNT(*) FROM correos').fetchone()[0], 0)
+        c.close()
+        self.assertEqual(pedir(evento='Evento', confirmar='Evento').json['videos'], 0,
+                         'borrar dos veces no es un error')
+
 if __name__ == '__main__':
     unittest.main()

@@ -455,6 +455,42 @@ def estado_correos():
         conn.close()
 
 
+@app.post("/api/borrar-evento")
+def borrar_evento():
+    """Borra un evento entero: sus archivos, sus videos y su historial de correos.
+
+    Existe para sacar las pruebas antes de la carrera, sin pedirle nada a quien
+    administra el servidor. Hay que escribir el nombre dos veces porque no tiene
+    vuelta atrás: el volumen no guarda copias de lo que se borra. Los correos ya
+    enviados no se pueden retirar; lo que se borra es el historial que evita
+    reenviarlos, así que un evento borrado y vuelto a subir los manda de nuevo.
+    """
+    if not autorizado():
+        return jsonify({"error": "token de subida inválido"}), 403
+    datos = request.get_json(silent=True) or {}
+    if not str(datos.get("evento") or "").strip():
+        return jsonify({"error": "falta el evento"}), 400
+    evento = apodo(datos.get("evento"))
+    if apodo(datos.get("confirmar")) != evento:
+        return jsonify({"error": "repetí el nombre del evento en «confirmar» para borrarlo"}), 409
+    conn = conectar()
+    try:
+        # Primero los archivos y después el índice, igual que la limpieza diaria:
+        # un corte en el medio deja huérfano un archivo, no un enlace sin video.
+        for fila in conn.execute("SELECT token FROM videos WHERE evento = ?", (evento,)).fetchall():
+            shutil.rmtree(carpeta_de(evento, fila["token"]), ignore_errors=True)
+        videos = conn.execute("DELETE FROM videos WHERE evento = ?", (evento,)).rowcount
+        correos_borrados = conn.execute("DELETE FROM correos WHERE evento = ?", (evento,)).rowcount
+        conn.commit()
+    finally:
+        conn.close()
+    shutil.rmtree(os.path.join(DATOS, evento), ignore_errors=True)
+    print("borrado el evento %s: %d videos, %d correos" % (evento, videos, correos_borrados),
+          flush=True)
+    return jsonify({"ok": True, "evento": evento, "videos": videos,
+                    "correos": correos_borrados})
+
+
 @app.get("/salud")
 def salud():
     conn = conectar()

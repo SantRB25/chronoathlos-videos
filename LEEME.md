@@ -98,6 +98,15 @@ ni envía correos. Después, con Santiago:
 5. Corregir un tiempo: mismo enlace, video actualizado y ningún correo duplicado.
 6. Actualizar/recrear el contenedor y comprobar que ese video sigue disponible.
 
+**Borrar las pruebas antes de la carrera**: `POST /api/borrar-evento` con la cabecera
+`X-Token` y `{"evento": "...", "confirmar": "..."}` elimina un evento completo: sus
+archivos, sus enlaces y su historial de correos. Lo usamos para que las pruebas de
+FOCUS no queden mezcladas con la carrera real, sin pedirte nada. Hay que escribir el
+nombre dos veces porque no tiene vuelta atrás —el volumen no guarda copias— y cada
+borrado queda registrado en el log del contenedor. Los correos ya enviados no se
+pueden retirar: lo que se borra es el historial que evita reenviarlos, así que un
+evento borrado y vuelto a subir los manda de nuevo.
+
 El servicio retiene las carreras seis meses y las limpia diariamente. Dimensionar
 con los archivos reales: 336 clips de 14 MB son alrededor de 4,7 GB por carrera,
 más miniaturas, versiones reemplazadas y respaldos. Vigilar `/salud` y el disco.

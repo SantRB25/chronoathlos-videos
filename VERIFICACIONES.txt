@@ -2,9 +2,9 @@ Entrega: 08/10/2026. Servicio ChronoAthlos v2, protocolo 3.
 
 Comprobado:
 - servidor.py, correos.py, Dockerfile y plantillas idénticos al código vigente de v2.
-- Siete pruebas del servidor aprobadas: reemplazos, enlaces, firmas, metadatos,
-  interrupción antes del commit, asignación del webhook por evento y la versión
-  que informa /salud.
+- Ocho pruebas del servidor aprobadas: reemplazos, enlaces, firmas, metadatos,
+  interrupción antes del commit, asignación del webhook por evento, la versión
+  que informa /salud y el borrado de un evento con doble confirmación.
 - Docker Compose validado con docker compose config --quiet.
 - Dockerfile construido con éxito en un entorno Docker real.
 - Contenedor de prueba independiente: arranque, API protegida (403 sin token),
