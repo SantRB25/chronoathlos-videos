@@ -98,5 +98,12 @@ class Versiones(unittest.TestCase):
         self.assertEqual(c.execute("SELECT desenlace FROM correos").fetchone()[0],'entregado')
         c.close()
 
+    def test_salud_informa_la_version_desplegada(self):
+        commit='867a48908a5b914101dcd9dc2b306aa20f50c5fc'
+        with patch.dict(os.environ, CHRONO_VERSION=commit):
+            self.assertEqual(self.client.get('/salud').json['version'],commit)
+        with patch.dict(os.environ, CHRONO_VERSION=''):
+            self.assertEqual(self.client.get('/salud').json['version'],'sin informar')
+
 if __name__ == '__main__':
     unittest.main()

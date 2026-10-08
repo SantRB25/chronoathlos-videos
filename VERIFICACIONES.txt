@@ -2,8 +2,9 @@ Entrega: 08/10/2026. Servicio ChronoAthlos v2, protocolo 3.
 
 Comprobado:
 - servidor.py, correos.py, Dockerfile y plantillas idénticos al código vigente de v2.
-- Seis pruebas del servidor aprobadas: reemplazos, enlaces, firmas, metadatos,
-  interrupción antes del commit y asignación del webhook por evento.
+- Siete pruebas del servidor aprobadas: reemplazos, enlaces, firmas, metadatos,
+  interrupción antes del commit, asignación del webhook por evento y la versión
+  que informa /salud.
 - Docker Compose validado con docker compose config --quiet.
 - Dockerfile construido con éxito en un entorno Docker real.
 - Contenedor de prueba independiente: arranque, API protegida (403 sin token),
@@ -18,7 +19,10 @@ Límites de la comprobación:
   persistencia, no de reproducción audiovisual. Reproducción y correos ya se
   probaron previamente en la instancia v2 de FOCUS, no en el servidor del cliente.
 - Sin envío de correos ni configuración Brevo dentro del contenedor de prueba.
-- Repositorio remoto, SSH limitado, proxy, dominio y despliegue del cliente todavía
-  no conectados. Los workflows se entregan preparados, no ejecutados en GitHub.
+- Repositorio remoto publicado y con verificación ejecutada en GitHub. SSH limitado,
+  proxy, dominio y despliegue del cliente todavía no conectados: el workflow de
+  despliegue se entrega preparado, nunca ejecutado contra su servidor.
+- La versión que informa /salud se probó en las pruebas del servidor; la comparación
+  del script y del workflow contra el commit pedido no se ejecutó en un servidor real.
 - La validación definitiva exige clip real, cinco subidas, correo y persistencia
   en https://videos.chronoathlos.com.py antes de cambiar la app a ese servicio.

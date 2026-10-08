@@ -462,7 +462,10 @@ def salud():
     conn.close()
     libre = shutil.disk_usage(DATOS).free / 1e9
     falta = correos.falta_configurar(correos.configuracion())
-    return jsonify({"ok": True, "videos": n, "espacio_libre_gb": round(libre, 1),
+    # La versión la fija quien despliega; sin ella no se puede saber qué código corre.
+    version = os.environ.get("CHRONO_VERSION", "") or "sin informar"
+    return jsonify({"ok": True, "version": version, "videos": n,
+                    "espacio_libre_gb": round(libre, 1),
                     "correos": "listo" if not falta else falta})
 
 

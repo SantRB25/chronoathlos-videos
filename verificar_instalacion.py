@@ -23,8 +23,9 @@ def main():
     salud = obtener(base + '/salud')
     if salud.get('ok') is not True:
         raise ValueError('Salud no confirmada')
-    print('Salud HTTPS: OK. Disco libre: %s GB. Correos: %s' % (
-        salud.get('espacio_libre_gb'), salud.get('correos')))
+    print('Salud HTTPS: OK. Version: %s. Disco libre: %s GB. Correos: %s' % (
+        salud.get('version', 'sin informar'), salud.get('espacio_libre_gb'),
+        salud.get('correos')))
     try:
         obtener(base + '/api/estado?evento=verificacion-instalacion')
     except urllib.error.HTTPError as e:

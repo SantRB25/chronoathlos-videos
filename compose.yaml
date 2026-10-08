@@ -9,6 +9,8 @@ services:
       CHRONO_TOKEN_SUBIDA: ${CHRONO_TOKEN_SUBIDA:?Completar CHRONO_TOKEN_SUBIDA en .env}
       CHRONO_DATOS: /datos
       PORT: '8090'
+      # Lo informa /salud para confirmar qué versión quedó instalada.
+      CHRONO_VERSION: ${CHRONO_VERSION:-entrega-20261008}
     ports:
       - '127.0.0.1:${CHRONO_PUERTO_HOST:-8090}:8090'
     volumes:

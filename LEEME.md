@@ -10,7 +10,7 @@ Código Python 3.12 + Flask/Waitress, protocolo de la app v2: **3**.
 ### Si usan EasyPanel
 
 1. Crear un servicio App exclusivo `chronoathlos-videos`. Usar este paquete como
-   fuente o un repositorio privado independiente. Constructor: Dockerfile en raíz.
+   fuente, o el repositorio de entrega del apartado 4. Constructor: Dockerfile en raíz.
 2. Puerto interno 8090. Montar un volumen persistente exclusivo en `/datos`.
 3. Copiar las variables de `.env.example` al panel y completar los secretos.
 4. Configurar el dominio `videos.chronoathlos.com.py`, destino puerto 8090,
@@ -82,8 +82,9 @@ curl --fail https://videos.chronoathlos.com.py/salud
 python3 verificar_instalacion.py
 ```
 
-El verificador utiliza librería estándar; comprueba salud HTTPS, autenticación y
-protocolo 3. No escribe datos ni envía correos. Después, con Santiago:
+El verificador utiliza librería estándar; comprueba salud HTTPS, autenticación,
+protocolo 3 y muestra la versión instalada que informa `/salud`. No escribe datos
+ni envía correos. Después, con Santiago:
 
 1. Configurar URL y token nuevos en la app v2 y subir un clip de prueba.
 2. Abrir página, miniatura, reproducir y descargar; comprobar la reproducción móvil.
@@ -99,34 +100,31 @@ No importar los datos de las pruebas de FOCUS como carrera real.
 
 ## 4. Actualizaciones sin intervención recurrente del desarrollador
 
-Propuesta: repositorio **privado independiente** de FOCUS, solo con estos archivos.
-El servidor obtiene permiso de lectura mediante deploy key o integración del
-panel. No necesitamos acceso al repositorio de la plataforma ni SSH del servidor.
+El código vive en un repositorio propio de este servicio, ya publicado:
+**https://github.com/SantRB25/chronoathlos-videos**, rama `produccion`. Es de
+lectura pública: el servidor lo clona sin credenciales ni invitación, y solo
+nosotros escribimos en él. No necesitamos acceso al repositorio de la plataforma
+ni una consola libre en el servidor.
 
-- Rama `produccion`: solo versiones probadas. Desactivar despliegue automático de
-  cada push; usar un despliegue explícito después de las pruebas.
-- El desarrollador configura una vez un enlace de despliegue que solo actualice
-  este servicio. Si EasyPanel ofrece Deployment URL, usar ese enlace, sin un token
-  administrativo general. Guardarlo como secreto `VIDEOS_DEPLOY_URL` del entorno
-  GitHub `produccion`; nunca en el código.
-- El workflow incluido prueba y construye en push/PR. La acción manual
-  «Verificar y desplegar videos», ejecutada en `produccion` con `desplegar=true`,
-  repite las pruebas y solicita el despliegue por POST.
-- El servidor debe leer el mismo repositorio y rama probados. No mover la rama
-  mientras se realiza el despliegue. Si el panel permite fijar commit o imagen,
-  preferir ese mecanismo para asegurar exactamente la versión elegida.
-- El workflow admite un enlace HTTPS de despliegue por POST; adaptar el mecanismo
-  si su panel exige otro método. No está conectado ni probado con su servidor aún.
-- Confirmar en el panel commit/imagen y finalización; `/salud` confirma que el
-  servicio responde, pero no identifica la versión instalada.
-- Durante una carrera, programar cambios fuera de grabación/procesamiento y envío.
-  Antes de actualizar, pausar la automatización y esperar que terminen subidas y
-  correos activos. Los videos ya publicados permanecen en el volumen.
+- Rama `produccion`: solo versiones probadas. Sin despliegue automático en cada
+  push; la actualización se solicita siempre de forma explícita.
+- Un único mecanismo, detallado en el apartado 7: una cuenta SSH dedicada cuya
+  clave solo puede ejecutar el script de actualización de este servicio.
+- El workflow «Verificar el servicio de videos» prueba y construye en cada push y
+  pull request. El workflow «Desplegar Docker por SSH limitado» se ejecuta a mano
+  desde `produccion`, repite las pruebas y recién entonces pide la actualización.
+- El servidor debe quedar en el mismo commit probado. No mover `produccion`
+  mientras se está desplegando.
+- `/salud` informa el campo `version` con el commit instalado: así se confirma qué
+  código quedó corriendo, sin entrar al servidor. El propio script compara ese
+  valor con el commit solicitado y avisa si no coinciden.
+- Durante una carrera, programar los cambios fuera de la grabación, el procesamiento
+  y el envío. Antes de actualizar, pausar la automatización y esperar que terminen
+  las subidas y los correos activos. Los videos publicados permanecen en el volumen.
 
-Si no hay enlace de despliegue, alternativas: mecanismo de CI con permiso limitado
-al servicio o imagen versionada en un registry con descarga autorizada. Git por
-sí solo no despliega: falta ese vínculo inicial al servidor. No instalar polling
-ni actualizaciones ciegas del sistema completo.
+Git por sí solo no actualiza Docker: hace falta ese vínculo con el servidor, que el
+administrador configura una sola vez. No instalar polling ni actualizaciones ciegas
+del sistema completo.
 
 ## 5. Respaldo y vuelta atrás
 
@@ -143,47 +141,46 @@ procedimiento propio; no restaurar un índice antiguo sobre videos nuevos sin re
 
 - Confirmación de HTTPS y volumen persistente.
 - Token de subida por canal privado, sin credenciales administrativas del servidor.
-- Método de actualizaciones y enlace limitado a este servicio, si está disponible.
+- Cuenta SSH de despliegue limitada a este servicio y huella del servidor (apartado 7).
 - Prueba conjunta de subida, correo, corrección y persistencia antes de usarlo en carrera.
 
-## 7. Servidor confirmado: Docker — mecanismo recomendado
+## 7. Servidor confirmado: Docker — configuración del mecanismo
 
-El desarrollador confirmó Docker. La instalación simple del apartado 1 sirve.
-Para actualizaciones autónomas, proponemos **Git privado + SSH con comando forzado**;
-no hace falta acceso a la consola ni instalar un panel.
+El desarrollador confirmó Docker. La instalación simple del apartado 1 alcanza para
+empezar. Para las actualizaciones usamos **Git + SSH con comando forzado**: no hace
+falta instalar un panel ni darnos una consola.
 
 Configuración inicial a cargo del administrador:
 
-1. Crear el repositorio privado independiente con estos archivos; rama `produccion`.
-   Dar al servidor una deploy key de **solo lectura** para ese repositorio.
-2. Clonar en `/opt/chronoathlos-videos/codigo`. Mantener `compose.yaml` y `.env`
-   fuera del clon, en `/opt/chronoathlos-videos/`, propiedad root. El Compose de
-   esta entrega admite `CHRONO_CODIGO` para construir desde el clon. Para la primera instalación en esta estructura:
+1. Clonar `https://github.com/SantRB25/chronoathlos-videos`, rama `produccion`, en
+   `/opt/chronoathlos-videos/codigo`. El repositorio es público: no hace falta
+   deploy key ni token de lectura. Mantener `compose.yaml` y `.env` fuera del clon,
+   en `/opt/chronoathlos-videos/`, propiedad root. El Compose de esta entrega admite
+   `CHRONO_CODIGO` para construir desde el clon. Para la primera instalación en esta
+   estructura:
    `CHRONO_CODIGO=/opt/chronoathlos-videos/codigo docker compose up -d --build`
    desde `/opt/chronoathlos-videos`, con `.env` completado.
-3. Instalar `actualizar-docker.sh` como `/usr/local/sbin/chronoathlos-videos-actualizar`,
+2. Instalar `actualizar-docker.sh` como `/usr/local/sbin/chronoathlos-videos-actualizar`,
    propietario root:root y modo 0755. Revisarlo antes; requiere Git, Docker Compose
    y `flock`. No dar escritura sobre este archivo a la cuenta de despliegue.
-4. Crear una cuenta SSH dedicada sin permisos generales de Docker y con sudo
+3. Crear una cuenta SSH dedicada sin permisos generales de Docker y con sudo
    permitido **solo** sobre ese script, sin argumentos. Restringir su clave pública
    a un comando forzado y sin forwarding/TTY. Ejemplo de línea en authorized_keys:
 
    `restrict,command="sudo -n /usr/local/sbin/chronoathlos-videos-actualizar" ssh-ed25519 CLAVE_PUBLICA_DE_DESPLIEGUE`
 
-   La clave privada de despliegue queda en los secretos de GitHub; enviar al
-   administrador únicamente su clave pública. Esta es distinta de la deploy key
-   usada por el servidor para leer Git. El administrador ajustará su política SSH
-   y sudo para que esta cuenta no tenga otros métodos de acceso ni privilegios.
-5. Cargar en el entorno GitHub `produccion`: `VIDEOS_SSH_HOST`, `VIDEOS_SSH_USER`,
+   La clave privada queda en los secretos de GitHub; al administrador le enviamos
+   únicamente la clave pública. El administrador ajustará su política de SSH y sudo
+   para que esta cuenta no tenga otros métodos de acceso ni privilegios.
+4. Cargar en el entorno GitHub `produccion`: `VIDEOS_SSH_HOST`, `VIDEOS_SSH_USER`,
    `VIDEOS_SSH_KEY` y `VIDEOS_SSH_KNOWN_HOSTS`. Confirmar la huella del servidor con
    el administrador; no aceptar una huella obtenida sin verificar su identidad.
-6. Ejecutar manualmente el workflow «Desplegar Docker por SSH limitado» desde
-   `produccion` después de pausar tareas. Este método reemplaza al webhook del
-   apartado 4; usar uno solo. El script solo actualiza el servicio `videos` y
-   conserva su volumen. No usar el usuario dentro del grupo docker.
+5. Ejecutar a mano el workflow «Desplegar Docker por SSH limitado» desde
+   `produccion`, después de pausar las tareas. El script solo actualiza el servicio
+   `videos` y conserva su volumen. No usar un usuario dentro del grupo docker.
 
 El script está preparado y validado sintácticamente, pero su instalación SSH/sudo
-requiere la configuración y prueba del administrador. No se ha instalado en el
+requiere la configuración y la prueba del administrador. No se ha instalado en el
 servidor del cliente. No mover `produccion` durante el despliegue; confirmar el
-commit que imprime el script. Para una versión futura con migraciones incompatibles,
-preparar instrucciones particulares antes de ejecutarla.
+commit que imprime el script y el que informa `/salud`. Para una versión futura con
+migraciones incompatibles, preparamos instrucciones particulares antes de ejecutarla.

@@ -44,3 +44,20 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$task_ssh_dir/known_hosts"
           chmod 600 "$task_ssh_dir/key" "$task_ssh_dir/known_hosts"
           ssh -i "$task_ssh_dir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$task_ssh_dir/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" desplegar
+      - name: Confirmar la version que informa el servicio
+        env:
+          SALUD_URL: ${{ vars.VIDEOS_URL_SALUD }}
+          ESPERADO: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -eu
+          if [ -z "${SALUD_URL:-}" ]; then
+            echo 'Sin VIDEOS_URL_SALUD configurada: confirmar a mano la version instalada.'
+            exit 0
+          fi
+          case "$SALUD_URL" in https://*) ;; *) echo 'VIDEOS_URL_SALUD debe ser HTTPS' >&2; exit 1 ;; esac
+          sleep 15
+          instalado=$(python -c "import json,os,urllib.request;print(json.load(urllib.request.urlopen(os.environ['SALUD_URL'],timeout=30)).get('version',''))")
+          echo "Version informada: $instalado"
+          # Un servicio que responde no prueba que corra el commit elegido.
+          [ "$instalado" = "$ESPERADO" ] || { echo "Se esperaba $ESPERADO" >&2; exit 1; }
