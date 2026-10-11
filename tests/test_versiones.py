@@ -32,6 +32,26 @@ class Versiones(unittest.TestCase):
     def estado(self):
         return self.client.get('/api/estado?evento=Evento', headers={'X-Token': 'prueba'}).json
 
+    def test_pagina_y_correo_ocultan_fracciones_sin_cambiar_el_tiempo_guardado(self):
+        import correos
+        subido=self.subir().json
+        r=self.client.post('/api/metadatos',json=dict(evento='Evento',dorsal='1',
+            firma=subido['firma'],tiempo='00:18:13.095',nombre='Prueba'),
+            headers={'X-Token':'prueba'})
+        self.assertEqual(r.status_code,200)
+        pagina=self.client.get(subido['url']).get_data(as_text=True)
+        self.assertIn('00:18:13',pagina)
+        self.assertNotIn('00:18:13.095',pagina)
+        conn=servidor.conectar()
+        try: fila=dict(conn.execute('SELECT * FROM videos WHERE dorsal=?',('1',)).fetchone())
+        finally: conn.close()
+        self.assertEqual(fila['tiempo'],'00:18:13.095')
+        html,texto=correos.armar(fila,'https://ejemplo.test/video',{'remitente_nombre':'Prueba'})
+        for contenido in (html,texto):
+            self.assertIn('00:18:13',contenido)
+            self.assertNotIn('00:18:13.095',contenido)
+        self.assertEqual(fila['tiempo'],'00:18:13.095')
+
     def test_version_mismo_enlace_reintento_y_contenido_incompleto(self):
         primera = self.subir().json
         self.assertEqual(primera['firma'], hashlib.sha256(b'videovideo1miniaturafoto').hexdigest())

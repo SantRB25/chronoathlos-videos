@@ -298,7 +298,9 @@ def pagina(evento, token):
     conn.commit()
     conn.close()
 
-    return render_template("video.html", v=dict(fila), evento=apodo(evento), token=token,
+    vista = dict(fila)
+    vista['tiempo'] = correos.tiempo_visible(vista.get('tiempo'))
+    return render_template("video.html", v=vista, evento=apodo(evento), token=token,
                            hay_foto=os.path.exists(os.path.join(carpeta, "foto.jpg")))
 
 

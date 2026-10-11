@@ -75,12 +75,17 @@ def falta_configurar(cfg):
 
 # ── el mensaje ──────────────────────────────────────────────────────────
 
+def tiempo_visible(valor):
+    """Oculta fracciones sin modificar los tiempos guardados ni su precisión."""
+    return re.sub(r'[.,]\d+$', '', str(valor or ''))
+
+
 def armar(v, enlace, cfg):
     """El HTML del correo. Tablas y estilos en línea: es lo único que
     interpretan igual Gmail, Outlook y los clientes de celular."""
     nombre = (v.get("nombre") or "").split()[0] if v.get("nombre") else ""
     saludo = "Hola %s," % nombre if nombre else "Hola,"
-    tiempo, dorsal = v.get("tiempo") or "", v.get("dorsal") or ""
+    tiempo, dorsal = tiempo_visible(v.get("tiempo")), v.get("dorsal") or ""
     evento = v.get("titulo") or "la carrera"
 
     celda_tiempo = ""
