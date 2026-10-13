@@ -327,6 +327,9 @@ def anotar_evento(conn, datos):
         return {"ok": False, "motivo": "no encontré a quién corresponde",
                 "campos": sorted(datos.keys())}
 
+    if email and email.casefold() != (fila["email"] or "").strip().casefold():
+        return {"ok": True, "ignorado": "aviso de una dirección anterior"}
+
     tipo = str(datos.get("event") or "").lower()
     if tipo in PROBLEMAS:
         nuevo, motivo = "problema", PROBLEMAS[tipo]
@@ -417,6 +420,14 @@ def enviar(abrir_conn, base_url, evento, reenviar=False, solo=None, prueba=None)
                 html, texto = armar(dict(v), enlace, cfg)
                 asunto = "Tu video de llegada — %s" % (v["titulo"] or evento)
                 destino = prueba or fila["email"]
+
+                if reenviar:
+                    # El nuevo intento debe recibir su propio desenlace. Hacerlo
+                    # antes del envío: el webhook puede llegar antes que SMTP responda.
+                    conn.execute("UPDATE correos SET desenlace=NULL, desenlace_motivo=NULL, "
+                                 "desenlace_momento=NULL WHERE evento=? AND dorsal=?",
+                                 (evento, fila["dorsal"]))
+                    conn.commit()
 
                 etiqueta = "%s|%s" % (evento, fila["dorsal"])
                 if relay:

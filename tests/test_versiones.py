@@ -118,6 +118,44 @@ class Versiones(unittest.TestCase):
         self.assertEqual(c.execute("SELECT desenlace FROM correos").fetchone()[0],'entregado')
         c.close()
 
+    def test_reenvio_limpia_rebote_y_acepta_entrega_solo_del_correo_actual(self):
+        import time
+        correos=servidor.correos
+        self.subir()
+        conn=servidor.conectar()
+        conn.execute("INSERT INTO correos(evento,dorsal,email,estado,desenlace) VALUES "
+                     "('evento','1','nuevo@example.test','enviado','problema')")
+        conn.execute("INSERT INTO correos(evento,dorsal,email,estado,desenlace) VALUES "
+                     "('evento','2','otro@example.test','enviado','clicado')")
+        conn.commit();conn.close()
+        def envio(*args):
+            c=servidor.conectar()
+            try:
+                self.assertIsNone(c.execute("SELECT desenlace FROM correos WHERE dorsal='1'").fetchone()[0])
+                resultado=correos.anotar_evento(c,{'event':'delivered','email':'nuevo@example.test',
+                                                  'X-Mailin-custom':'evento|1'})
+                self.assertTrue(resultado['ok']);c.commit()
+            finally:c.close()
+            return 'id-prueba',None
+        with patch.dict(os.environ,BREVO_CLAVE='xkeysib-prueba',CHRONO_REMITENTE='p@example.test'), \
+             patch.object(correos,'por_api',side_effect=envio) as enviar:
+            self.assertTrue(correos.enviar(servidor.conectar,'https://ejemplo.test','evento',
+                                          reenviar=True,solo={'1'})['ok'])
+            limite=time.monotonic()+5
+            while correos.TRABAJO['corriendo'] and time.monotonic()<limite:time.sleep(.01)
+            self.assertFalse(correos.TRABAJO['corriendo'])
+            self.assertIsNone(correos.TRABAJO['error'])
+            enviar.assert_called_once()
+        c=servidor.conectar()
+        try:
+            self.assertEqual(c.execute("SELECT desenlace FROM correos WHERE dorsal='1'").fetchone()[0],'entregado')
+            self.assertEqual(c.execute("SELECT desenlace FROM correos WHERE dorsal='2'").fetchone()[0],'clicado')
+            resultado=correos.anotar_evento(c,{'event':'hard_bounce','email':'viejo@example.test',
+                                              'X-Mailin-custom':'evento|1'})
+            self.assertIn('ignorado',resultado)
+            self.assertEqual(c.execute("SELECT desenlace FROM correos WHERE dorsal='1'").fetchone()[0],'entregado')
+        finally:c.close()
+
     def test_salud_informa_la_version_desplegada(self):
         commit='867a48908a5b914101dcd9dc2b306aa20f50c5fc'
         with patch.dict(os.environ, CHRONO_VERSION=commit):
